@@ -1,6 +1,9 @@
 import json
 import requests
-import twilio.twiml
+import twilio
+import flask
+from flask import Flask, request
+from twilio import twiml
 from string import Template
 
 with open('config.json', 'r') as config_file:
@@ -25,21 +28,22 @@ def get_stock_quote(db, sym):
     result = requests.get(url, params=params).json()
     return parse_stock_info(result)
 
-def construct_twiml(message, phone_number):
-    response = twilio.twiml.Response()
-    help_message = message_templates.get('help_message')
-    response.addSms(help_message, to=phone_number)
-    return twiml(response)
+def twiml_response(message, phone_number):
+    twilio_resp = twilio.twiml.Response()
+    twilio_resp.addSms(message, to=phone_number)
+    response = flask.Response(str(twilio_resp))
+    response.headers['Content-Type'] = 'text/xml'
+    return response
 
 def get_help_twiml(phone_number):
     help_message = message_templates.get('help_message')
-    return construct_twiml(help_message, phone_number)
+    return twiml_response(help_message, phone_number)
 
 def get_quote_twiml(symbol, phone_numer):
-    quote = get_stock_quote('WIKI', symbol)
-    return construct_twiml(quote, phone_number)
+    quote = get_stock_quote('WIKI', symbol).get('Close')
+    print(quote)
+    return twiml_response(quote, phone_number)
 
-from flask import Flask, request
 app = Flask(__name__)
 
 @app.route('/sms', methods=['POST'])
@@ -54,7 +58,10 @@ def recieve_text():
 
 @app.route('/quote')
 def quote():
-    get_stock_quote('WIKI','MSFT')
+    q = get_stock_quote('WIKI','MSFT').get('Close')
+    print(q)
+    return str(q)
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
