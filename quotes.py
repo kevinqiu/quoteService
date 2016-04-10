@@ -26,7 +26,7 @@ def get_stock_quote(db, sym):
     params = {'api_key':quandl_key, 'rows': 1}
     url = quandl_url(db, sym)
     result = requests.get(url, params=params).json()
-    return parse_stock_info(result)
+    return str(parse_stock_info(result).get('Close'))
 
 def twiml_response(message, phone_number):
     twilio_resp = twilio.twiml.Response()
@@ -39,8 +39,8 @@ def get_help_twiml(phone_number):
     help_message = message_templates.get('help_message')
     return twiml_response(help_message, phone_number)
 
-def get_quote_twiml(symbol, phone_numer):
-    quote = get_stock_quote('WIKI', symbol).get('Close')
+def get_quote_twiml(symbol, phone_number):
+    quote = get_stock_quote('WIKI', symbol)
     print(quote)
     return twiml_response(quote, phone_number)
 
@@ -48,8 +48,9 @@ app = Flask(__name__)
 
 @app.route('/sms', methods=['POST'])
 def recieve_text():
-    number = request.form['from']
+    number = request.form['From']
     text = request.form['Body']
+    print(request)
     if text[0] == '$':
         response_twiml = get_quote_twiml(text[1:], number)
     else:
@@ -59,9 +60,8 @@ def recieve_text():
 @app.route('/quote')
 def quote():
     q = get_stock_quote('WIKI','MSFT').get('Close')
-    print(q)
     return str(q)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)
