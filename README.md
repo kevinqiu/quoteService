@@ -3,7 +3,7 @@ Simple twilio app to service quote information
 
 A flask app that listens for sms requests and returns with quote information.
 
-To use, text the number with $SYMBOL. 
+To use, text the number with a symbol prefixed with $. Ex. $MSFT 
 
 Commands: 
 $SYMBOL -> Retrieves any tickers in the message prefixed with $. Multiple symbols can be retrieved by entering more than one symbol.
@@ -11,6 +11,7 @@ Spaces can be used as optional separators for easy of use.
 Ex. to find the quote for Microsoft, send $MSFT. 
 For Microsoft and Apple, send $MSFT$AAPL or $MSFT $AAPL
 Sending asd$AAPL will result in $AAPL being returned and the prefix before $ being thrown away.
+Symbols are case insensitive.
 
 help -> To access the unsubscribe menu
 
