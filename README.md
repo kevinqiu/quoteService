@@ -18,3 +18,7 @@ help -> To access the unsubscribe menu
 last -> repeats the last query
 
 Entering a text string that does not contain $ and is not a command will result in the help message.
+
+TODOS:
+
+Implement unit tests for functions. Modularize functions. 
