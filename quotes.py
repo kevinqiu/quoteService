@@ -24,7 +24,6 @@ def save_symbols(number, syms):
     NumberEntry = Query()
     number_symbol_entry = { 'number': number, 'symbols': syms }
     updated = db.update(number_symbol_entry, NumberEntry.number == number)
-    print(updated)
     if len(updated) == 0:
         db.insert(number_symbol_entry)
     logging.info('Symbols saved for ', number)
@@ -84,9 +83,9 @@ def extract_symbols(text):
     symbols = re.findall(r'\$(\w*)', text)
     return list(set(map(str.upper, symbols)))
 
+# load saved symbols or
+# extract symbols from message
 def get_symbols(number, text):
-    # load saved symbols or
-    # extract symbols from message
     if bool(re.match('last', text, re.I)):
         symbols = retrieve_symbols(number)
     else:
@@ -121,4 +120,4 @@ def recieve_text():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
