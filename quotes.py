@@ -2,6 +2,7 @@ import json
 import requests
 import twilio
 import flask
+from tinydb import TinyDB, Query
 from flask import Flask, request
 from twilio import twiml
 from string import Template
@@ -13,6 +14,8 @@ with open('config.json', 'r') as config_file:
 quandl_key = config.get('quandl_key')
 message_templates = config.get('message_templates')
 
+def save_symbol(number, sym)
+
 def quandl_url(db, sym):
     return 'https://www.quandl.com/api/v3/datasets/'+ db+ '/' + sym + '/data.json'
 
@@ -22,11 +25,23 @@ def parse_stock_info(result_json):
     data_row = response_data.get('data')[0]
     return dict(zip(headers, data_row))
 
-def get_stock_quote(db, sym):
+def get_stock_quote_quandl(db, sym):
     params = {'api_key':quandl_key, 'rows': 1}
     url = quandl_url(db, sym)
     result = requests.get(url, params=params).json()
     return str(parse_stock_info(result).get('Close'))
+
+def get_stock_quote_markit(sym):
+    markit = 'http://dev.markitondemand.com/MODApis/Api/v2/Quote/json'
+    params = {'symbol': sym }
+    result = requests.get(url, params=params).json()
+    return { sym: result.get('LastPrice') }
+
+def get_quotes(symbolList):
+    return map(symbolList, get_stock_quote_markit
+
+def format_quotes(quotesList):
+    
 
 def twiml_response(message, phone_number):
     twilio_resp = twilio.twiml.Response()
