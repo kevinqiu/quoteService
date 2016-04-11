@@ -14,7 +14,7 @@ with open('config.json', 'r') as config_file:
 quandl_key = config.get('quandl_key')
 message_templates = config.get('message_templates')
 
-def save_symbol(number, sym)
+def save_symbol(number, sym):
 
 def quandl_url(db, sym):
     return 'https://www.quandl.com/api/v3/datasets/'+ db+ '/' + sym + '/data.json'
@@ -29,19 +29,29 @@ def get_stock_quote_quandl(db, sym):
     params = {'api_key':quandl_key, 'rows': 1}
     url = quandl_url(db, sym)
     result = requests.get(url, params=params).json()
-    return str(parse_stock_info(result).get('Close'))
+    quoteDict = parse_stock_info(result)
+    return {'symbol': sym
+            'price': quoteDict.get('Close')}
 
 def get_stock_quote_markit(sym):
     markit = 'http://dev.markitondemand.com/MODApis/Api/v2/Quote/json'
     params = {'symbol': sym }
     result = requests.get(url, params=params).json()
-    return { sym: result.get('LastPrice') }
+    return { 'symbol': result.get('Symbol'),
+             'price': result.get('LastPrice') }
 
-def get_quotes(symbolList):
-    return map(symbolList, get_stock_quote_markit
+def format_quote(quote):
+    quote_str = Template(message_templates.get('quote_template'))
+    quote_str.substitute(symbol = quote['symbol'], price = quote['price'])
+    return quote_str
 
 def format_quotes(quotesList):
-    
+    quote_strings = map(quotesList, format_quote)
+    return quote_strings.join(',')
+
+def get_quotes(symbolList):
+    quotes =  map(symbolList, get_stock_quote_markit)
+    return format_quotes(quotes)
 
 def twiml_response(message, phone_number):
     twilio_resp = twilio.twiml.Response()
@@ -55,7 +65,7 @@ def get_help_twiml(phone_number):
     return twiml_response(help_message, phone_number)
 
 def get_quote_twiml(symbol, phone_number):
-    quote = get_stock_quote('WIKI', symbol)
+    quote = get_quotes([symbol])
     print(quote)
     return twiml_response(quote, phone_number)
 
@@ -71,11 +81,6 @@ def recieve_text():
     else:
         response_twiml = get_help_twiml(number)
     return response_twiml
-
-@app.route('/quote')
-def quote():
-    q = get_stock_quote('WIKI','MSFT').get('Close')
-    return str(q)
 
 
 if __name__ == '__main__':
