@@ -1,0 +1,8 @@
+{"twilio_sid": "",
+ "twilio_token":"",
+ "max_quotes": "5",
+ "message_templates":
+ {"help_message": "To get a quote for a stock, simply text the ticker with a $ at the beginning. For example, to get a quote for Microsoft, text $MSFT. Multiple quotes can be retrieved by entering multiple symbols separated by a space. To repeat the last query, text LAST.",
+  "quote_template": "$symbol: $price",
+  "error_message": "There was a problem retrieving the quote(s), try again",
+  "max_exceeded": "There is a maximal retrieval limit of $max_quotes quotes per request"}}
