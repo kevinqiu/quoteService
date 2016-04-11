@@ -14,7 +14,6 @@ with open('config.json', 'r') as config_file:
     config_string = config_file.read()
     config = json.loads(config_string)
 
-quandl_key = config.get('quandl_key')
 message_templates = config.get('message_templates')
 db = tinydb.TinyDB('db.json')
 max_quotes = int(config.get('max_quotes'))
