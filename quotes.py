@@ -17,6 +17,7 @@ with open('config.json', 'r') as config_file:
 quandl_key = config.get('quandl_key')
 message_templates = config.get('message_templates')
 db = tinydb.TinyDB('db.json')
+max_quotes = int(config.get('max_quotes'))
 
 def save_symbols(number, syms):
     NumberEntry = Query()
@@ -78,7 +79,7 @@ def get_quotes_twiml(symbols, phone_number):
 
 def extract_symbols(text):
     symbols = re.findall(r'\$(\w*)', text)
-    return list(map(str.upper, symbols))
+    return set(map(str.upper, symbols))
 
 app = Flask(__name__)
 
@@ -91,8 +92,10 @@ def recieve_text():
         symbols = retrieve_symbols(number)
     else:
         symbols = extract_symbols(text)
-
-    if len(symbols) > 0:
+    if len(symbols) > max_quotes:
+        max_template = Template(message_templates.get('max_exceeded'))
+        response_twiml = twiml_response(max_template.substitute(max_quotes = max_quotes), number)
+    elif len(symbols) > 0:
         try:
             save_symbols(number, symbols)
         except:
