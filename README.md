@@ -19,6 +19,8 @@ last -> repeats the last query
 
 Entering a text string that does not contain $ and is not a command will result in the help message.
 
+Before running the app, rename the example.json file to config.json. Currently, the twilio keys are not used so they can be left blank.
+
 TODOS:
 
 Implement unit tests for functions. Modularize functions. 
