@@ -19,21 +19,27 @@ message_templates = config.get('message_templates')
 db = tinydb.TinyDB('db.json')
 max_quotes = int(config.get('max_quotes'))
 
+# String, String -> Unit
 def save_symbols(number, syms):
     NumberEntry = Query()
     number_symbol_entry = { 'number': number, 'symbols': syms }
     updated = db.update(number_symbol_entry, NumberEntry.number == number)
+    print(updated)
     if len(updated) == 0:
         db.insert(number_symbol_entry)
     logging.info('Symbols saved for ', number)
     return
 
+# String -> List[String]
 def retrieve_symbols(number):
     logging.info('Retrieving symbols for ', number)
     NumberEntry = Query()
     results = db.search(NumberEntry.number == number)
     return results[0]['symbols'] if len(results) > 0 else []
 
+# string -> SymbolObj
+# makes request to markitondemand api for symbols
+# SymbolObj is a dictionary with keys symbol and price
 def get_stock_quote_markit(sym):
     markitUrl = 'http://dev.markitondemand.com/MODApis/Api/v2/Quote/json'
     params = {'symbol': sym }
@@ -41,7 +47,7 @@ def get_stock_quote_markit(sym):
     price = result.get('LastPrice')
     return { 'symbol': sym,
              'price': result.get('LastPrice') }
-
+# SymbolObj -> String
 def format_quote(quote):
     quote_tmp = Template(message_templates.get('quote_template'))
     if quote['price'] != None:
@@ -50,36 +56,42 @@ def format_quote(quote):
         price = 'Invalid Symbol'
     return quote_tmp.substitute(symbol = quote['symbol'], price = price)
 
+# List[SymbolObj] -> String
 def format_quotes(quotesList):
     quote_strings = list(map(format_quote, quotesList))
     return ', '.join(quote_strings)
 
+# SymbolObj -> Bool
 def validQuote(quote):
     return quote['price'] != None
 
-def get_quotes(symbolList):
+# List[String] -> String
+def get_formatted_quotes(symbolList):
     logging.info('Retrieving quotes for ', symbolList)
     quotes =  list(map(get_stock_quote_markit, symbolList))
     return format_quotes(quotes)
 
-def twiml_response(message, phone_number):
+# String, String -> flask.Response
+def twiml_sms_response(message, phone_number):
     twilio_resp = twilio.twiml.Response()
     twilio_resp.addSms(message, to=phone_number)
     response = flask.Response(str(twilio_resp))
     response.headers['Content-Type'] = 'text/xml'
     return response
 
-def get_help_twiml(phone_number):
-    help_message = message_templates.get('help_message')
-    return twiml_response(help_message, phone_number)
-
-def get_quotes_twiml(symbols, phone_number):
-    quote = get_quotes(symbols)
-    return twiml_response(quote, phone_number)
-
+# String -> List[String]
 def extract_symbols(text):
     symbols = re.findall(r'\$(\w*)', text)
-    return set(map(str.upper, symbols))
+    return list(set(map(str.upper, symbols)))
+
+def get_symbols(number, text):
+    # load saved symbols or
+    # extract symbols from message
+    if bool(re.match('last', text, re.I)):
+        symbols = retrieve_symbols(number)
+    else:
+        symbols = extract_symbols(text)
+    return symbols
 
 app = Flask(__name__)
 
@@ -87,28 +99,25 @@ app = Flask(__name__)
 def recieve_text():
     number = request.form['From']
     text = request.form['Body']
+    symbols = get_symbols(number, text)
 
-    if bool(re.match('last', text, re.I)):
-        symbols = retrieve_symbols(number)
-    else:
-        symbols = extract_symbols(text)
     if len(symbols) > max_quotes:
         max_template = Template(message_templates.get('max_exceeded'))
-        response_twiml = twiml_response(max_template.substitute(max_quotes = max_quotes), number)
+        max_reached_notice = max_template.substitute(max_quotes = max_quotes)
+        message = max_reached_notice
     elif len(symbols) > 0:
         try:
             save_symbols(number, symbols)
         except:
-            logging.error('Could not save symbols for number', number)
             #log save error
+            logging.error('Could not save symbols for number', number)
         try:
-            response_twiml = get_quotes_twiml(symbols, number)
+            message = get_formatted_quotes(symbols)
         except:
-            error = message_templates.get('error_message')
-            response_twiml = twiml_response(error, number)
+            message = message_templates.get('error_message')
     else:
-        response_twiml = get_help_twiml(number)
-    return response_twiml
+        message = message_templates.get('help_message')
+    return twiml_sms_response(message, number)
 
 
 if __name__ == '__main__':
