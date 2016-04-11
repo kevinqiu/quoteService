@@ -21,7 +21,7 @@ Entering a text string that does not contain $ and is not a command will result 
 
 Before running the app, rename the example.json file to config.json. Currently, the twilio keys are not used so they can be left blank.
 
-Data is retrieved through the public markitondemand demo API. For production use, an unrate limited API would be needed.
+Data is retrieved through the public markitondemand demo API. For production use, a non rate limited API would be needed. One would just need to implement a function to replace get_stock_quote_markit.
 
 TODOS:
 
