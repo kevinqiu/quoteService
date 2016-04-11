@@ -15,6 +15,7 @@ quandl_key = config.get('quandl_key')
 message_templates = config.get('message_templates')
 
 def save_symbol(number, sym):
+    return
 
 def quandl_url(db, sym):
     return 'https://www.quandl.com/api/v3/datasets/'+ db+ '/' + sym + '/data.json'
@@ -30,7 +31,7 @@ def get_stock_quote_quandl(db, sym):
     url = quandl_url(db, sym)
     result = requests.get(url, params=params).json()
     quoteDict = parse_stock_info(result)
-    return {'symbol': sym
+    return {'symbol': sym,
             'price': quoteDict.get('Close')}
 
 def get_stock_quote_markit(sym):
